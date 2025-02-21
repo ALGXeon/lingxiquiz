@@ -1,0 +1,11 @@
+# 忽略 mdimgs 目录及其所有子目录中的内容
+/mdimgs/
+
+# 忽略 notes.md 文件
+/notes.md
+
+# 忽略 .vscode 目录及其所有子目录中的内容
+/.vscode/
+
+# 忽略 .idea 目录及其所有子目录中的内容
+/.idea/
