@@ -5,6 +5,12 @@ declare namespace API {
     questionNumber?: number;
   };
 
+  type aiGenerateQuestionSSEUsingGETParams = {
+    appId?: number;
+    optionNumber?: number;
+    questionNumber?: number;
+  };
+
   type App = {
     appDesc?: string;
     appIcon?: string;
@@ -664,6 +670,10 @@ declare namespace API {
     updateTime?: string;
     user?: UserVO;
     userId?: number;
+  };
+
+  type SseEmitter = {
+    timeout?: number;
   };
 
   type uploadFileUsingPOSTParams = {

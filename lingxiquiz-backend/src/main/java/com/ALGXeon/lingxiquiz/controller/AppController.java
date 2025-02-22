@@ -1,6 +1,7 @@
 package com.ALGXeon.lingxiquiz.controller;
 
 import com.ALGXeon.lingxiquiz.common.*;
+import com.ALGXeon.lingxiquiz.scoring.AiTestScoringStrategy;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ALGXeon.lingxiquiz.annotation.AuthCheck;
 import com.ALGXeon.lingxiquiz.common.*;
@@ -41,6 +42,9 @@ public class AppController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private AiTestScoringStrategy aiTestScoringStrategy;  // 注入 AiTestScoringStrategy
 
     // region 增删改查
 
@@ -277,6 +281,14 @@ public class AppController {
         app.setReviewTime(new Date());
         boolean result = appService.updateById(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+
+        // 如果审核通过并且是特定类型的应用，则清理缓存
+        if (reviewStatusEnum.equals(ReviewStatusEnum.PASS) &&
+                oldApp.getAppType() == 1 &&
+                oldApp.getScoringStrategy() == 1) {
+            aiTestScoringStrategy.clearCacheByAppId(id);
+        }
+
         return ResultUtils.success(true);
     }
 }

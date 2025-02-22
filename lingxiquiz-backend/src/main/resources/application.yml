@@ -75,4 +75,4 @@ knife4j:
         api-rule-resources:
           - com.ALGXeon.lingxiquiz.controller
 ai:
-  apiKey: "0e9f6071508a401baeaa733a0a561b8f.8E2QKGu96n1rlmry"
+  apiKey: ${lingxiquizZhiPuAIAPI_KEY}

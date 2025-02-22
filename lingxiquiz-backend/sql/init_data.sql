@@ -6,7 +6,7 @@ INSERT INTO user (id, userAccount, userPassword, unionId, mpOpenId, userName, us
                   createTime, updateTime, isDelete)
 VALUES (1, 'ALGXeon', 'b0dd3697a192885d7c055db46155b26a', null, null, 'ALGXeon',
         'https://k.sinaimg.cn/n/sinakd20110/560/w1080h1080/20230930/915d-f3d7b580c33632b191e19afa0a858d31.jpg/w700d1q75cms.jpg',
-        '欢迎来编程导航学习', 'admin', '2024-05-09 11:13:13', '2024-05-09 15:07:48', 0);
+        '小天才管理员', 'admin', '2024-05-09 11:13:13', '2024-05-09 15:07:48', 0);
 
 -- 应用表初始数据
 INSERT INTO app (id, appName, appDesc, appIcon, appType, scoringStrategy, reviewStatus, reviewMessage, reviewerId,
