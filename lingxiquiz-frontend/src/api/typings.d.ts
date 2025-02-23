@@ -727,6 +727,7 @@ declare namespace API {
   type UserAnswerAddRequest = {
     appId?: number;
     choices?: string[];
+    id?: number;
   };
 
   type UserAnswerEditRequest = {

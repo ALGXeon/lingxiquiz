@@ -18,7 +18,6 @@ spring:
     # 30 天过期
     timeout: 2592000
   # 数据库配置
-  # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/lingxiquiz
@@ -81,13 +80,12 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
 # 对象存储
-# todo 需替换配置，暂时没有COS
 cos:
   client:
-    accessKey: xxx
-    secretKey: xxx
-    region: xxx
-    bucket: xxx
+    accessKey: ${TecentCOSzxszxsSecretId}
+    secretKey: ${TecentCOSzxszxsSecretKey}
+    region: ap-guangzhou
+    bucket: lingxiquiz-1344371334
 # 接口文档配置
 knife4j:
   enable: true

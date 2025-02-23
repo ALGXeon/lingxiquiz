@@ -1,5 +1,6 @@
 package com.ALGXeon.lingxiquiz.controller;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import com.ALGXeon.lingxiquiz.service.AiUsageService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -87,9 +88,14 @@ public class UserAnswerController {
         // 填充默认值
         User loginUser = userService.getLoginUser(request);
         userAnswer.setUserId(loginUser.getId());
-        // 写入数据库
-        boolean result = userAnswerService.save(userAnswer);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        try {
+            // 写入数据库
+            boolean result = userAnswerService.save(userAnswer);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        }catch (Exception e){
+            //ignore 多次添加相同的userAnswer时会报错，不管
+        }
+
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
 
@@ -282,4 +288,12 @@ public class UserAnswerController {
     }
 
     // endregion
+
+    /*
+     * 生成用户答案 ID，在进入答题页面的时候调用
+     */
+    @GetMapping("/generate/id")
+    public BaseResponse<Long> generateUserAnswerId() {
+        return ResultUtils.success(IdUtil.getSnowflakeNextId());
+    }
 }

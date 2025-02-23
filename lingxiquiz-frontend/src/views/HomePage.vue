@@ -12,6 +12,7 @@
         button-text="搜索"
         size="large"
         search-button
+        @search="handleSearch"
       />
     </div>
     <a-list
@@ -52,6 +53,17 @@ const searchParams = ref<API.AppQueryRequest>({
 });
 const dataList = ref<API.AppVO[]>([]);
 const total = ref<number>(0);
+
+/**
+ * 处理搜索操作
+ * @param searchText 搜索关键词
+ */
+const handleSearch = (searchText: string) => {
+  searchParams.value = {
+    ...initSearchParams, // 重置分页参数
+    searchText, // 设置搜索关键词
+  };
+};
 
 /**
  * 加载数据

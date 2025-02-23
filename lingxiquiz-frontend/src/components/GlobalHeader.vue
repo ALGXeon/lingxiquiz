@@ -13,7 +13,7 @@
         >
           <div class="titleBar">
             <!--素材版权https://www.iconfont.cn/user/detail?spm=a313x.search_index.0.d214f71f6.72ec3a81EADk86&uid=3865146&nid=pMERe0emZ2Tj-->
-            <img class="logo" src="../public/logo.png" alt="" />
+            <img class="logo" src="../assets/logo.png" alt="" />
             <div class="title">灵犀问答</div>
           </div>
         </a-menu-item>

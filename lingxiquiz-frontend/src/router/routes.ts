@@ -1,5 +1,5 @@
 import { RouteRecordRaw } from "vue-router";
-import HomeView from "@/views/HomeView.vue";
+import HomePage from "@/views/HomePage.vue";
 import UserLayout from "@/layouts/UserLayout.vue";
 import UserLoginPage from "@/views/user/UserLoginPage.vue";
 import UserRegisterPage from "@/views/user/UserRegisterPage.vue";
@@ -24,7 +24,7 @@ export const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "主页",
-    component: HomeView,
+    component: HomePage,
   },
   {
     path: "/hide",

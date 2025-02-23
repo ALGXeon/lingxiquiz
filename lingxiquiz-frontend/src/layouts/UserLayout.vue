@@ -3,7 +3,7 @@
     <a-layout style="height: 100vh">
       <a-layout-header class="header">
         <a-space>
-          <img class="logo" src="../public/logo.png" />
+          <img class="logo" src="../assets/logo.png" />
           <div class="title">灵犀问答</div>
         </a-space>
       </a-layout-header>
