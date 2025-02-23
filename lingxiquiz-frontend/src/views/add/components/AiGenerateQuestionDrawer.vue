@@ -35,34 +35,41 @@
           />
         </a-form-item>
         <a-form-item>
-          <a-space>
-            <a-button
-              :loading="submitting"
-              type="primary"
-              html-type="submit"
-              style="width: 120px"
-            >
-              {{ submitting ? "生成中" : "一键生成" }}
-            </a-button>
-            <a-button
-              :loading="sseSubmitting"
-              style="width: 120px"
-              @click="handleSSESubmit"
-            >
-              {{ sseSubmitting ? "生成中" : "实时生成" }}
-            </a-button>
-          </a-space>
+          <a-button
+            :loading="submitting"
+            type="primary"
+            html-type="submit"
+            style="width: 120px"
+          >
+            {{ submitting ? "生成中" : "一键生成" }}
+          </a-button>
+          <a-button
+            :loading="sseSubmitting"
+            style="width: 120px"
+            @click="handleSSESubmit"
+          >
+            {{ sseSubmitting ? "生成中" : "实时生成" }}
+          </a-button>
         </a-form-item>
+        <p v-if="availableUses !== null">
+          <span v-if="availableUses === 0">今日AI使用次数用尽，明天再来吧</span>
+          <span v-else> 今日AI剩余使用次数：{{ availableUses }}</span>
+        </p>
       </a-form>
     </div>
   </a-drawer>
 </template>
 
 <script setup lang="ts">
-import { defineProps, reactive, ref, withDefaults } from "vue";
+import { defineProps, onMounted, reactive, ref, withDefaults } from "vue";
 import API from "@/api";
 import { aiGenerateQuestionUsingPost } from "@/api/questionController";
 import message from "@arco-design/web-vue/es/message";
+import { getAvailableUsesUsingGet } from "@/api/aiUsageController";
+import { useLoginUserStore } from "@/store/userStore";
+
+const loginUserStore = useLoginUserStore();
+loginUserStore.fetchLoginUser();
 
 interface Props {
   appId: string;
@@ -86,15 +93,31 @@ const form = reactive({
 const visible = ref(false);
 const submitting = ref(false);
 const sseSubmitting = ref(false);
+const availableUses = ref<number | null>(null);
 
 const handleClick = () => {
   visible.value = true;
+  fetchAvailableUses();
 };
 const handleOk = () => {
   visible.value = false;
 };
 const handleCancel = () => {
   visible.value = false;
+};
+
+/**
+ * 获取剩余使用次数
+ */
+const fetchAvailableUses = async () => {
+  const res = await getAvailableUsesUsingGet({
+    userId: loginUserStore.loginUser.id,
+  });
+  if (res.data.code === 0) {
+    availableUses.value = res.data.data;
+  } else {
+    message.error("获取剩余使用次数失败：" + res.data.message);
+  }
 };
 
 /**
@@ -123,6 +146,10 @@ const handleSubmit = async () => {
   submitting.value = false;
 };
 
+onMounted(() => {
+  fetchAvailableUses();
+});
+
 /**
  * 提交（实时生成）
  */
@@ -130,6 +157,17 @@ const handleSSESubmit = async () => {
   if (!props.appId) {
     return;
   }
+
+  // 获取剩余使用次数
+  const availableUsesRes = await getAvailableUsesUsingGet({
+    userId: loginUserStore.loginUser.id,
+  });
+
+  if (availableUsesRes.data.code !== 0 || availableUsesRes.data.data <= 0) {
+    message.error("剩余AI使用次数不足，无法生成！");
+    return;
+  }
+
   sseSubmitting.value = true;
   // 创建 SSE 请求
   const eventSource = new EventSource(

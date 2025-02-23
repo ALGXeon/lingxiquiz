@@ -201,4 +201,17 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         return appVOPage;
     }
 
+    @Override
+    public long getUserID(long appID) {
+        // 通过appID查询App实体
+        App app = this.getById(appID);
+
+        // 检查是否存在该应用
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+
+        // 返回用户的ID
+        return app.getUserId();
+    }
+
+
 }

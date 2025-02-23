@@ -1,6 +1,7 @@
 package com.ALGXeon.lingxiquiz.controller;
 
 import cn.hutool.json.JSONUtil;
+import com.ALGXeon.lingxiquiz.service.AiUsageService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ALGXeon.lingxiquiz.annotation.AuthCheck;
 import com.ALGXeon.lingxiquiz.common.BaseResponse;
@@ -54,6 +55,9 @@ public class UserAnswerController {
     @Resource
     private ScoringStrategyExecutor scoringStrategyExecutor;
 
+    @Resource
+    private AiUsageService aiUsageService;
+
     // region 增删改查
 
     /**
@@ -90,6 +94,9 @@ public class UserAnswerController {
         long newUserAnswerId = userAnswer.getId();
         // 调用评分模块
         try {
+            if(!aiUsageService.tryGetAndUse(loginUser.getId())){
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI使用次数已用完");
+            }
             UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(choices, app);
             userAnswerWithResult.setId(newUserAnswerId);
             userAnswerService.updateById(userAnswerWithResult);

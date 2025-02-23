@@ -95,3 +95,12 @@ create table if not exists user_answer
     index idx_appId (appId),
     index idx_userId (userId)
 ) comment '用户答题记录' collate = utf8mb4_unicode_ci;
+
+CREATE TABLE ai_usage (
+    userId               BIGINT                    NOT NULL comment '用户ID',
+    availableUses        INT DEFAULT 10            comment '当前可用次数',
+    lastUsedDate        DATE                      comment '上次使用日期',
+    isDelete              tinyint default 0         not null comment '是否删除',
+    PRIMARY KEY (userId),
+    FOREIGN KEY (userId) REFERENCES user(id) ON DELETE CASCADE
+);

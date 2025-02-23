@@ -6,6 +6,7 @@ import com.ALGXeon.lingxiquiz.manager.AiManager;
 import com.ALGXeon.lingxiquiz.model.dto.question.*;
 import com.ALGXeon.lingxiquiz.model.entity.App;
 import com.ALGXeon.lingxiquiz.model.enums.AppTypeEnum;
+import com.ALGXeon.lingxiquiz.service.AiUsageService;
 import com.ALGXeon.lingxiquiz.service.AppService;
 import com.ALGXeon.lingxiquiz.tools.OpenAIApiUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -61,6 +62,9 @@ public class QuestionController {
 
     @Resource
     private AiManager aiManager;
+
+    @Resource
+    private AiUsageService aiUsageService;
 
 
     // region 增删改查
@@ -304,9 +308,15 @@ public class QuestionController {
 
 
     @PostMapping("/ai_generate")
-    public BaseResponse<List<QuestionContentDTO>> aiGenerateQuestion(@RequestBody AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+    public BaseResponse<List<QuestionContentDTO>> aiGenerateQuestion(@RequestBody AiGenerateQuestionRequest aiGenerateQuestionRequest, HttpServletRequest request) {
         // 检查请求参数是否为空
         ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+
+        // 检查用户AI剩余使用次数，不足则报错
+        User loginUser = userService.getLoginUser(request);
+        if(!aiUsageService.tryGetAndUse(loginUser.getId())){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "用户今日AI使用剩余次数不足");
+        }
 
         // 获取参数
         Long appId = aiGenerateQuestionRequest.getAppId();
@@ -377,8 +387,18 @@ public class QuestionController {
     @GetMapping("/ai_generate/sse")
     public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest) {
         ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+
         // 获取参数
         Long appId = aiGenerateQuestionRequest.getAppId();
+
+        // 消耗用户AI剩余使用次数
+        long loginUserID = appService.getUserID(appId);
+        if(!aiUsageService.tryGetAndUse(loginUserID)){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "用户今日AI使用剩余次数不足");
+        }
+
+
+        // 获取参数
         int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
         int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
         // 获取应用信息

@@ -24,6 +24,7 @@ spring:
     url: jdbc:mysql://localhost:3306/lingxiquiz
     username: root
     password: ${MYSQLROOTPASSWORD}
+#      ${MYSQLROOTPASSWORD}
   # 文件上传
   servlet:
     multipart:

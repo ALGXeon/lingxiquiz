@@ -38,6 +38,12 @@
             </a-button>
             <a-button v-if="isMy" :href="`/add/app/${id}`">修改应用</a-button>
           </a-space>
+          <p v-if="availableUses !== null">
+            <span v-if="availableUses === 0"
+              >今日AI使用次数用尽，明天再来吧</span
+            >
+            <span v-else> 今日AI剩余使用次数：{{ availableUses }}</span>
+          </p>
         </a-col>
         <a-col flex="320px">
           <a-image width="100%" :src="data.appIcon" />
@@ -48,7 +54,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, ref, watchEffect, withDefaults } from "vue";
+import {
+  computed,
+  defineProps,
+  onMounted,
+  ref,
+  watchEffect,
+  withDefaults,
+} from "vue";
 import API from "@/api";
 import { getAppVoByIdUsingGet } from "@/api/appController";
 import message from "@arco-design/web-vue/es/message";
@@ -56,6 +69,7 @@ import { useRouter } from "vue-router";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 import { useLoginUserStore } from "@/store/userStore";
 import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "@/constant/app";
+import { getAvailableUsesUsingGet } from "@/api/aiUsageController";
 
 interface Props {
   id: string;
@@ -66,6 +80,9 @@ const props = withDefaults(defineProps<Props>(), {
     return "";
   },
 });
+
+// 声明一个响应式变量来保存剩余使用次数
+const availableUses = ref<number | null>(null);
 
 const router = useRouter();
 
@@ -78,6 +95,27 @@ let loginUserId = loginUserStore.loginUser?.id;
 const isMy = computed(() => {
   return loginUserId && loginUserId === data.value.userId;
 });
+
+// 在组件挂载时尝试获取一次剩余使用次数
+onMounted(() => {
+  fetchAvailableUses();
+});
+
+/**
+ * 获取剩余使用次数
+ */
+const fetchAvailableUses = async () => {
+  if (loginUserId) {
+    const res = await getAvailableUsesUsingGet({
+      userId: loginUserId,
+    });
+    if (res.data.code === 0) {
+      availableUses.value = res.data.data;
+    } else {
+      message.error("获取剩余使用次数失败：" + res.data.message);
+    }
+  }
+};
 
 /**
  * 加载数据

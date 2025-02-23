@@ -50,4 +50,9 @@ public interface AppService extends IService<App> {
      * @return
      */
     Page<AppVO> getAppVOPage(Page<App> appPage, HttpServletRequest request);
+
+    /*
+     * 获取用户ID
+     */
+    long getUserID(long appID);
 }

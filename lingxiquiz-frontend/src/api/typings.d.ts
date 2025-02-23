@@ -253,6 +253,11 @@ declare namespace API {
     id?: number;
   };
 
+  type getAvailableUsesUsingGETParams = {
+    /** userId */
+    userId?: number;
+  };
+
   type getPostVOByIdUsingGETParams = {
     /** id */
     id?: number;
