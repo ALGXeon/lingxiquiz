@@ -92,13 +92,18 @@ public class UserAnswerController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         // 返回新写入的数据 id
         long newUserAnswerId = userAnswer.getId();
-        // 调用评分模块
-        try {
+
+        if(app.getScoringStrategy()==1){
+            // 调用评分模块
             if(!aiUsageService.tryGetAndUse(loginUser.getId())){
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI使用次数已用完");
             }
+        }
+
+        try {
             UserAnswer userAnswerWithResult = scoringStrategyExecutor.doScore(choices, app);
             userAnswerWithResult.setId(newUserAnswerId);
+            userAnswerWithResult.setAppId(null); // 前面已经保存了一次，也就是AppId已经存了，AppId作为分库分表的键，不能再执行set
             userAnswerService.updateById(userAnswerWithResult);
         } catch (Exception e) {
             e.printStackTrace();

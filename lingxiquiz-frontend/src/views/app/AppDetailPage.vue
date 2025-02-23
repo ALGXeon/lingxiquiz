@@ -38,11 +38,15 @@
             </a-button>
             <a-button v-if="isMy" :href="`/add/app/${id}`">修改应用</a-button>
           </a-space>
-          <p v-if="availableUses !== null">
-            <span v-if="availableUses === 0"
-              >今日AI使用次数用尽，明天再来吧</span
+          <p v-if="availableUses !== null && data.scoringStrategy === 1">
+            <strong
+              ><span v-if="availableUses === 0"
+                >今日AI使用次数用尽，明天再来吧</span
+              >
+              <span v-else>
+                今日AI剩余使用次数：{{ availableUses }}</span
+              ></strong
             >
-            <span v-else> 今日AI剩余使用次数：{{ availableUses }}</span>
           </p>
         </a-col>
         <a-col flex="320px">
