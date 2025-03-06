@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Configuration
 @Data
-public class VipSchedulerConfig {
+public class SchedulerConfig {
 
     @Bean
     public Scheduler vipScheduler() {
@@ -31,5 +31,10 @@ public class VipSchedulerConfig {
         };
         ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(10, threadFactory);
         return Schedulers.from(scheduledExecutorService);
+    }
+
+    @Bean
+    public Scheduler commonScheduler() {
+        return Schedulers.from(Executors.newFixedThreadPool(10));
     }
 }

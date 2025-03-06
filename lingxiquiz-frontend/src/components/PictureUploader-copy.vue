@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { IconEdit, IconPlus } from "@arco-design/web-vue/es/icon";
-import { ref, watch, withDefaults, defineProps } from "vue";
+import { ref, withDefaults, defineProps } from "vue";
 import { uploadFileUsingPost } from "@/api/fileController";
 import { Message } from "@arco-design/web-vue";
 
@@ -65,12 +65,10 @@ interface Props {
  * 给组件指定初始值
  */
 const props = withDefaults(defineProps<Props>(), {
-  value: "",
+  value: () => "",
 });
 
-const file = ref<any>(null);
-
-// 初始化文件状态
+const file = ref();
 if (props.value) {
   file.value = {
     url: props.value,
@@ -79,49 +77,28 @@ if (props.value) {
   };
 }
 
-// 监听 props.value 变化，更新文件状态
-watch(
-  () => props.value,
-  (newValue) => {
-    if (newValue) {
-      file.value = {
-        url: newValue,
-        percent: 100,
-        status: "done",
-      };
-    } else {
-      file.value = null;
-    }
-  }
-);
-
 // 自定义请求
 const customRequest = async (option: any) => {
   const { onError, onSuccess, fileItem } = option;
 
-  try {
-    const res: any = await uploadFileUsingPost(
-      { biz: props.biz },
-      {},
-      fileItem.file
-    );
-    if (res.data.code === 0 && res.data.data) {
-      const url = res.data.data;
-      file.value = {
-        name: fileItem.name,
-        file: fileItem.file,
-        url,
-        status: "done",
-        percent: 100,
-      };
-      props.onChange?.(url);
-      onSuccess();
-    } else {
-      throw new Error(res.data.message || "上传失败");
-    }
-  } catch (error) {
-    Message.error("上传失败，" + error.message || "");
-    onError(error);
+  const res: any = await uploadFileUsingPost(
+    { biz: props.biz },
+    {},
+    fileItem.file
+  );
+  if (res.data.code === 0 && res.data.data) {
+    const url = res.data.data;
+    file.value = {
+      name: fileItem.name,
+      file: fileItem.file,
+      url,
+    };
+    props.onChange?.(url);
+    onSuccess();
+    console.log(file.value);
+  } else {
+    Message.error("上传失败，" + res.data.message || "");
+    onError(new Error(res.data.message));
   }
 };
 </script>

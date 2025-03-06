@@ -24,6 +24,13 @@ spring:
     username: root
     password: ${MYSQLROOTPASSWORD}
 #      ${MYSQLROOTPASSWORD}
+  redis:
+    database: 1
+    host: localhost
+    port: 6379
+    timeout: 2000
+  #    password: 123456
+
   # 文件上传
   servlet:
     multipart:
@@ -61,6 +68,7 @@ spring:
               standard:
                 sharding-column: appId
                 sharding-algorithm-name: answer-table-inline
+
 server:
   address: 0.0.0.0
   port: 8101

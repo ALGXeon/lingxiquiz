@@ -110,7 +110,7 @@ public class UserController {
     }
 
     /**
-     * 获取当前登录用户
+     * 获取脱敏的当前登录用户
      *
      * @param request
      * @return

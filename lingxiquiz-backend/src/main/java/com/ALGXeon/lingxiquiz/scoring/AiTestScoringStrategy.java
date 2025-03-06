@@ -3,8 +3,6 @@ package com.ALGXeon.lingxiquiz.scoring;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
-import com.ALGXeon.lingxiquiz.common.ErrorCode;
-import com.ALGXeon.lingxiquiz.exception.BusinessException;
 import com.ALGXeon.lingxiquiz.manager.AiManager;
 import com.ALGXeon.lingxiquiz.model.dto.question.QuestionAnswerDTO;
 import com.ALGXeon.lingxiquiz.model.dto.question.QuestionContentDTO;
@@ -19,6 +17,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.json.JSONObject;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -38,6 +38,11 @@ public class AiTestScoringStrategy implements ScoringStrategy {
 
     @Resource
     private AiManager aiManager;
+
+    private static final String AI_ANSWER_LOCK = "AI_ANSWER_LOCK";
+
+    @Resource
+    private RedissonClient redissonClient;
 
     /**
      * AI 评分结果本地缓存
@@ -102,59 +107,66 @@ public class AiTestScoringStrategy implements ScoringStrategy {
             return userAnswer;
         }
 
-        // 1. 根据 id 查询到题目
-        Question question = questionService.getOne(
-                Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, appId)
-        );
-        QuestionVO questionVO = QuestionVO.objToVo(question);
-        List<QuestionContentDTO> questionContent = questionVO.getQuestionContent();
+        RLock lock = redissonClient.getLock(AI_ANSWER_LOCK + cacheKey);
+        try {
+            boolean res = lock.tryLock(10, 30, TimeUnit.SECONDS);
+            if(!res)return null;
+            // 1. 根据 id 查询到题目
+            Question question = questionService.getOne(
+                    Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, appId)
+            );
+            QuestionVO questionVO = QuestionVO.objToVo(question);
+            List<QuestionContentDTO> questionContent = questionVO.getQuestionContent();
 
-        // 2. 封装 Prompt
-        String promptMessage = getAiTestScoringPromptMessage(app, questionContent, choices);
+            // 2. 封装 Prompt
+            String promptMessage = getAiTestScoringPromptMessage(app, questionContent, choices);
 
-        System.out.println(promptMessage);
+            // AI 生成
+            String result = aiManager.doMyRequest(promptMessage);
 
-        // AI 生成
-        String result = aiManager.doMyRequest(promptMessage);
-        System.out.println(result);
+            // 使用工具类解析AI返回的结果
+            OpenAIApiUtils.Tuple<String, JSONObject> parsedResult = OpenAIApiUtils.tryParseJsonObject(result);
+            JSONObject cleanedJson = parsedResult.item2;
 
-        // 使用工具类解析AI返回的结果
-        OpenAIApiUtils.Tuple<String, JSONObject> parsedResult = OpenAIApiUtils.tryParseJsonObject(result);
-        JSONObject cleanedJson = parsedResult.item2;
+            // 提取并转换为UserAnswer对象
+            UserAnswer userAnswer = new UserAnswer();
 
-        // 提取并转换为UserAnswer对象
-        UserAnswer userAnswer = new UserAnswer();
+            if (cleanedJson.has("message") && !cleanedJson.isNull("message")) {
+                JSONObject messageJson = cleanedJson.getJSONObject("message");
+                if (messageJson.has("content") && !messageJson.isNull("content")) {
+                    String content = messageJson.getString("content");
 
-        if (cleanedJson.has("message") && !cleanedJson.isNull("message")) {
-            JSONObject messageJson = cleanedJson.getJSONObject("message");
-            if (messageJson.has("content") && !messageJson.isNull("content")) {
-                String content = messageJson.getString("content");
+                    int start = content.indexOf("{");
+                    int end = content.lastIndexOf("}");
+                    String json = content.substring(start, end + 1);
 
-                int start = content.indexOf("{");
-                int end = content.lastIndexOf("}");
-                String json = content.substring(start, end + 1);
+                    // 解析内容中的JSON部分
+                    JSONObject resultJson = new org.json.JSONObject(json);
 
-                System.out.println(json);
-                // 解析内容中的JSON部分
-                JSONObject resultJson = new org.json.JSONObject(json);
+                    if (resultJson.has("resultName") && !resultJson.isNull("resultName") &&
+                            resultJson.has("resultDesc") && !resultJson.isNull("resultDesc")) {
+                        userAnswer.setResultName(resultJson.getString("resultName"));
+                        userAnswer.setResultDesc(resultJson.getString("resultDesc"));
+                    }
+                }
+            }
 
-                if (resultJson.has("resultName") && !resultJson.isNull("resultName") &&
-                        resultJson.has("resultDesc") && !resultJson.isNull("resultDesc")) {
-                    userAnswer.setResultName(resultJson.getString("resultName"));
-                    userAnswer.setResultDesc(resultJson.getString("resultDesc"));
+            answerCacheMap.put(cacheKey, JSONUtil.toJsonStr(userAnswer));
+
+            // 填充答案对象的其他属性
+            userAnswer.setAppId(appId);
+            userAnswer.setAppType(app.getAppType());
+            userAnswer.setScoringStrategy(app.getScoringStrategy());
+            userAnswer.setChoices(JSONUtil.toJsonStr(choices));
+
+            return userAnswer;
+        } finally {
+            if(lock != null && lock.isLocked()){
+                if(lock.isHeldByCurrentThread()){
+                    lock.unlock(); // 只有锁的持有人才能释放锁，不然会导致因超时而释放锁的线程最终再次释放了其他线程的锁
                 }
             }
         }
-
-        answerCacheMap.put(cacheKey, JSONUtil.toJsonStr(userAnswer));
-
-        // 填充答案对象的其他属性
-        userAnswer.setAppId(appId);
-        userAnswer.setAppType(app.getAppType());
-        userAnswer.setScoringStrategy(app.getScoringStrategy());
-        userAnswer.setChoices(JSONUtil.toJsonStr(choices));
-
-        return userAnswer;
     }
 
     /**

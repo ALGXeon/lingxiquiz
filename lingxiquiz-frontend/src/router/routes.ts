@@ -19,6 +19,7 @@ import AdminScoringResultPage from "@/views/admin/AdminScoringResultPage.vue";
 import AdminUserAnswerPage from "@/views/admin/AdminUserAnswerPage.vue";
 import AdminPage from "@/views/admin/AdminPage.vue";
 import AboutView from "@/views/AboutView.vue";
+import UserInfoPage from "@/views/user/UserInfoPage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -173,6 +174,16 @@ export const routes: Array<RouteRecordRaw> = [
       },
     ],
     meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/user/info/:id",
+    name: "用户信息",
+    component: UserInfoPage,
+    props: true,
+    meta: {
+      access: ACCESS_ENUM.USER,
       hideInMenu: true,
     },
   },

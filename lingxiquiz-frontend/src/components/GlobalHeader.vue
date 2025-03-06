@@ -24,15 +24,10 @@
     </a-col>
     <a-col flex="100px">
       <div v-if="loginUserStore.loginUser.id" class="userInfo">
-        <a-avatar>
-          <img
-            alt="avatar"
-            width="32"
-            height="32"
-            :src="loginUserStore.loginUser.userAvatar"
-            style="border-radius: 50%; margin-right: 10px"
-          />
-        </a-avatar>
+        <Avatar
+          :userId="loginUserStore.loginUser.id"
+          :userAvatar="loginUserStore.loginUser.userAvatar"
+        />
         <span :style="{ marginRight: '10px', marginLeft: '8px' }">
           {{ loginUserStore.loginUser.userName ?? "无名" }}
         </span>
@@ -52,6 +47,7 @@ import { computed, ref } from "vue";
 import { useLoginUserStore } from "@/store/userStore";
 import checkAccess from "@/access/checkAccess";
 import { userLogoutUsingPost } from "@/api/userController";
+import Avatar from "@/components/Avatar.vue";
 
 const loginUserStore = useLoginUserStore();
 

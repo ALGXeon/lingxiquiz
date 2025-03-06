@@ -100,7 +100,7 @@ public class UserAnswerController {
         long newUserAnswerId = userAnswer.getId();
 
         if(app.getScoringStrategy()==1){
-            // 调用评分模块
+            // 检查AI使用次数限制
             if(!aiUsageService.tryGetAndUse(loginUser.getId())){
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI使用次数已用完");
             }

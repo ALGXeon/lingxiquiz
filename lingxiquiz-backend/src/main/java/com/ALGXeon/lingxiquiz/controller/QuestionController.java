@@ -26,6 +26,7 @@ import com.ALGXeon.lingxiquiz.service.QuestionService;
 import com.ALGXeon.lingxiquiz.service.UserService;
 import com.zhipu.oapi.service.v4.model.ModelData;
 import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -65,6 +66,12 @@ public class QuestionController {
 
     @Resource
     private AiUsageService aiUsageService;
+
+    @Resource
+    private Scheduler vipScheduler;
+
+    @Resource
+    private Scheduler commonScheduler;
 
 
     // region 增删改查
@@ -385,7 +392,7 @@ public class QuestionController {
     }
 
     @GetMapping("/ai_generate/sse")
-    public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+    public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
 
         // 获取参数
@@ -414,8 +421,18 @@ public class QuestionController {
         AtomicInteger counter = new AtomicInteger(0);
         // 拼接完整题目
         StringBuilder stringBuilder = new StringBuilder();
+
+        // 获取登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 使用普通用户的线程池
+        Scheduler scheduler = commonScheduler;
+        // 如果是管理员，使用 vip 线程池，后续可以开通VIP模式
+        if ("admin".equals(loginUser.getUserRole())) {
+            scheduler = vipScheduler;
+        }
+
         modelDataFlowable
-                .observeOn(Schedulers.io())
+                .observeOn(scheduler)
                 .map(modelData -> modelData.getChoices().get(0).getDelta().getContent()) // 获取数据
                 .map(message -> message.replaceAll("\\s", ""))  // 过滤无意义字符
                 .filter(StrUtil::isNotBlank)
@@ -440,7 +457,7 @@ public class QuestionController {
                             // 使用 OpenAIApiUtils 处理和解析 JSON 字符串
                             OpenAIApiUtils.Tuple<String, JSONObject> parsedResult = OpenAIApiUtils.tryParseJsonObject(stringBuilder.toString());
                             String cleanedJson = parsedResult.item1;
-                            JSONObject jsonObject = parsedResult.item2;
+//                            JSONObject jsonObject = parsedResult.item2;
 
                             try {
                                 // 发送经过处理的JSON给前端

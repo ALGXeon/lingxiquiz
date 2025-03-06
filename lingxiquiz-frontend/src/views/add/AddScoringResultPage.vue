@@ -20,17 +20,11 @@
       <a-form-item field="resultDesc" label="结果描述">
         <a-input v-model="form.resultDesc" placeholder="请输入结果描述" />
       </a-form-item>
-      <a-form-item field="resultPicture" label="结果图标">
-        <a-input
-          v-model="form.resultPicture"
-          placeholder="请输入结果图标地址"
-        />
-      </a-form-item>
       <a-form-item field="appIcon" label="结果图标">
         <PictureUploader
           biz="scoring_result_picture"
-          :value="form.appIcon"
-          :onChange="(value) => (form.appIcon = value)"
+          :value="form.resultPicture"
+          :onChange="(value) => (form.resultPicture = value)"
         />
       </a-form-item>
       <a-form-item field="resultProp" label="结果集">
@@ -59,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, withDefaults } from "vue";
+import { defineProps, onMounted, ref, withDefaults } from "vue";
 import API from "@/api";
 import { useRouter } from "vue-router";
 import ScoringResultTable from "@/views/add/components/ScoringResultTable.vue";
