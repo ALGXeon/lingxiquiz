@@ -1,6 +1,3 @@
-# 忽略 mdimgs 目录及其所有子目录中的内容
-/mdimgs/
-
 # 忽略 notes.md 文件
 /notes.md
 
