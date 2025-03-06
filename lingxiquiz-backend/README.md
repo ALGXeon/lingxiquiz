@@ -8,3 +8,15 @@
 `lingxiquizZhiPuAIAPI_KEY: {your_api_key}`  
 - 在src/main/resources/application.properties中配置  
 将`{lingxiquizZhiPuAIAPI_KEY}`替换为你的API key  
+
+## 数据库连接信息
+```yml
+spring:
+    datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/lingxiquiz
+    username: root
+    password: ${MYSQLROOTPASSWORD}
+```
+
+替换成你自己的mysql  
